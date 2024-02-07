@@ -13,12 +13,12 @@ class User(db.Model, SerializerMixin):
     username = db.Column(db.String, unique = True, nullable = False)
     _password_hash = db.Column(db.String)
     #relationship column:
-    bookclubs = db.relationship('BookClubs', back_populates = "user")
+    book_clubs = db.relationship('Bookclubs', back_populates = "user")
     library = db.relationship('Library', back_populates = "user")
     review = db.relationship('Review', back_populates = "user")
     book = db.relationship('Book', back_populates = "user")
     #serialzier:
-    serialize_rules = ('',)
+    serialize_rules = ('-book_clubs.users', '-library.users', '-review.users', '-book.users')
 
     @hybrid_property
     def password_hash(self):
@@ -48,7 +48,7 @@ class Bookclubs(db.Model,SerializerMixin):
     name = db.Column(db.String)
     #relationship columns:
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    user = db.relationship("User", back_populates="book_clubs")
+    user = db.relationship("User", back_populates=("book_clubs"))
     book_id = db.Column(db.Integer, db.ForeignKey("book.id"))
     book = db.relationship("Book", back_populates=("book_clubs"))
     #serializer:
@@ -63,9 +63,9 @@ class Library(db.Model,SerializerMixin):
     name = db.Column(db.String)
     #relationship columns:
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    user = db.relationship("User", back_populates="book_clubs")
+    user = db.relationship("User", back_populates="library")
     book_id = db.Column(db.Integer, db.ForeignKey("book.id"))
-    book = db.relationship("Book", back_populates=("book_clubs"))
+    book = db.relationship("Book", back_populates=("library"))
     
     #serializer:
     serialize_rules=('-book.library','-user.library')
@@ -79,9 +79,9 @@ class Review(db.Model,SerializerMixin):
     review = db.Column(db.String)
     #relationship columns:
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    user = db.relationship("User", back_populates="book_clubs")
+    user = db.relationship("User", back_populates="review")
     book_id = db.Column(db.Integer, db.ForeignKey("book.id"))
-    book = db.relationship("Book", back_populates=("book_clubs"))
+    book = db.relationship("Book", back_populates=("review"))
     #serializer:
     serialize_rules=('-book.review','-user.review')
 
@@ -91,16 +91,18 @@ class Review(db.Model,SerializerMixin):
 class Book(db.Model,SerializerMixin):
     __tablename__= "book"
     id = db.Column(db.Integer, primary_key = True)
-    name = db.Column(db.String)
+    title = db.Column(db.String)
+    author = db.Column(db.String)
+    genre = db.Column(db.String)
     #relationship columns:
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    user = db.relationship("User", back_populates="book_clubs")
-    bookclubs = db.relationship('BookClubs', back_populates = "user")
-    library = db.relationship('Library', back_populates = "user")
-    review = db.relationship('Review', back_populates = "user")
+    user = db.relationship("User", back_populates="book")
+    book_clubs = db.relationship('Bookclubs', back_populates = "book")
+    library = db.relationship('Library', back_populates = "book")
+    review = db.relationship('Review', back_populates = "book")
     #serializer:
-    serialize_rules=('-bookclubs.book','-user.book','-library.book', '-review.book')
+    serialize_rules=('-book_clubs.book','-user.book','-library.book', '-review.book')
 
     def __repr__(self):
-        return repr(f"{self.name}")
+        return repr(f"{self.title}, {self.author}, {self.genre}")
 
